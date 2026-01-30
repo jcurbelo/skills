@@ -5,14 +5,17 @@ description: Guidelines for building production-ready HTTP APIs with Deno and Ho
 
 # Deno API with Hono
 
-You are an expert in Deno and TypeScript development with deep knowledge of building secure, scalable HTTP APIs using the Hono framework, Deno's native TypeScript support, and modern web standards.
+You are an expert in Deno and TypeScript development with deep knowledge of
+building secure, scalable HTTP APIs using the Hono framework, Deno's native
+TypeScript support, and modern web standards.
 
 ## TypeScript General Guidelines
 
 ### Basic Principles
 
 - Use English for all code and documentation
-- Always declare types for variables and functions (parameters and return values)
+- Always declare types for variables and functions (parameters and return
+  values)
 - Avoid using `any` type - create necessary types instead
 - Use JSDoc to document public classes and methods
 - Write concise, maintainable, and technically accurate code
@@ -25,7 +28,8 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 - Use camelCase for variables, functions, and methods
 - Use kebab-case for file and directory names
 - Use UPPERCASE for environment variables
-- Use descriptive variable names with auxiliary verbs: `isLoading`, `hasError`, `canDelete`
+- Use descriptive variable names with auxiliary verbs: `isLoading`, `hasError`,
+  `canDelete`
 - Start each function with a verb
 
 ### Functions
@@ -33,11 +37,13 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 - Write short functions with a single purpose
 - Use arrow functions for simple operations and consistency
 - Use async/await for asynchronous operations
-- Prefer the RO-RO pattern (Receive Object, Return Object) for multiple parameters
+- Prefer the RO-RO pattern (Receive Object, Return Object) for multiple
+  parameters
 
 ### Types and Interfaces
 
-- Prefer interfaces over types for object shapes (better for extensibility in APIs)
+- Prefer interfaces over types for object shapes (better for extensibility in
+  APIs)
 - Avoid enums; use const objects with `as const`
 - Use Zod for runtime validation with inferred types
 - Use `readonly` for immutable properties
@@ -46,20 +52,27 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 
 ## Questions to Ask First
 
-Before implementing, clarify these with the user to determine which patterns to apply:
+Before implementing, clarify these with the user to determine which patterns to
+apply:
 
-1. **Authentication**: "What authentication method do you need - JWT tokens, API keys, or both?"
-2. **Rate limiting**: "Do you need rate limiting? If yes, do you want to use Upstash Redis or in-memory?"
-3. **Database**: "What database will you use - Upstash Redis, PostgreSQL, or none (stateless)?"
-4. **Logging**: "Do you need structured logging with @std/log, or is console.log sufficient?"
-5. **Validation**: "Do you want request validation with Zod, or manual validation?"
+1. **Authentication**: "What authentication method do you need - JWT tokens, API
+   keys, or both?"
+2. **Rate limiting**: "Do you need rate limiting? If yes, do you want to use
+   Upstash Redis or in-memory?"
+3. **Database**: "What database will you use - Upstash Redis, PostgreSQL, or
+   none (stateless)?"
+4. **Logging**: "Do you need structured logging with @std/log, or is console.log
+   sufficient?"
+5. **Validation**: "Do you want request validation with Zod, or manual
+   validation?"
 6. **Deployment**: "Will this deploy to Deno Deploy, Docker, or run standalone?"
 
 ---
 
 ## Guides
 
-The following sections are **templates and patterns** to apply based on the user's answers above. Adapt them to the specific use case.
+The following sections are **templates and patterns** to apply based on the
+user's answers above. Adapt them to the specific use case.
 
 ---
 
@@ -106,6 +119,7 @@ project/
 ```
 
 **Add imports based on needs:**
+
 ```bash
 # Always needed
 deno add jsr:@std/dotenv jsr:@hono/hono
@@ -158,6 +172,7 @@ export const PORT = Number(Deno.env.get("PORT") ?? 8000);
 ```
 
 **.env.example:**
+
 ```
 PORT=8000
 # Add based on needs:
@@ -247,7 +262,11 @@ export const successResponse = <T>(c: Context, data: T): Response => {
   return c.json(response);
 };
 
-export const errorResponse = (c: Context, error: string, status: number): Response => {
+export const errorResponse = (
+  c: Context,
+  error: string,
+  status: number,
+): Response => {
   const response: ApiErrorResponse = { success: false, error };
   return c.json(response, status);
 };
@@ -286,7 +305,10 @@ import type { Context } from "hono";
 import { ADMIN_API_KEY } from "../config/env.ts";
 import { errorResponse } from "../utils/api.ts";
 
-const apiKeyAuth = async (c: Context, next: () => Promise<void>): Promise<Response | void> => {
+const apiKeyAuth = async (
+  c: Context,
+  next: () => Promise<void>,
+): Promise<Response | void> => {
   const apiKey = c.req.header("x-api-key");
 
   if (!apiKey) {
@@ -324,6 +346,7 @@ app.get("/protected", (c) => {
 ```
 
 **JWT Token Generation (if needed):**
+
 ```typescript
 // src/services/jwt.ts
 import { create, verify } from "djwt";
@@ -430,10 +453,14 @@ class LoggerWrapper {
       .map((p) => (typeof p === "object" ? JSON.stringify(p) : String(p)))
       .join(" ");
 
-  debug = (msg: unknown, ...args: unknown[]): void => this.logger.debug(this.format(msg, ...args));
-  info = (msg: unknown, ...args: unknown[]): void => this.logger.info(this.format(msg, ...args));
-  warn = (msg: unknown, ...args: unknown[]): void => this.logger.warn(this.format(msg, ...args));
-  error = (msg: unknown, ...args: unknown[]): void => this.logger.error(this.format(msg, ...args));
+  debug = (msg: unknown, ...args: unknown[]): void =>
+    this.logger.debug(this.format(msg, ...args));
+  info = (msg: unknown, ...args: unknown[]): void =>
+    this.logger.info(this.format(msg, ...args));
+  warn = (msg: unknown, ...args: unknown[]): void =>
+    this.logger.warn(this.format(msg, ...args));
+  error = (msg: unknown, ...args: unknown[]): void =>
+    this.logger.error(this.format(msg, ...args));
 }
 
 export const logger = new LoggerWrapper();
@@ -466,14 +493,14 @@ app.post("/users", async (c: Context) => {
 
 ## HTTP Status Codes
 
-| Code | Usage |
-|------|-------|
-| 200 | Success |
-| 400 | Bad request / validation error |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 429 | Rate limit exceeded |
-| 500 | Internal server error |
+| Code | Usage                          |
+| ---- | ------------------------------ |
+| 200  | Success                        |
+| 400  | Bad request / validation error |
+| 401  | Unauthorized                   |
+| 403  | Forbidden                      |
+| 429  | Rate limit exceeded            |
+| 500  | Internal server error          |
 
 ## Security Model
 

@@ -5,14 +5,17 @@ description: Guidelines for developing standalone Deno CLI scripts using TypeScr
 
 # Deno CLI Scripting
 
-You are an expert in Deno and TypeScript development with deep knowledge of building standalone CLI scripts, batch processing tools, and diagnostic utilities using Deno's native TypeScript support and built-in tooling.
+You are an expert in Deno and TypeScript development with deep knowledge of
+building standalone CLI scripts, batch processing tools, and diagnostic
+utilities using Deno's native TypeScript support and built-in tooling.
 
 ## TypeScript General Guidelines
 
 ### Basic Principles
 
 - Use English for all code and documentation
-- Always declare types for variables and functions (parameters and return values)
+- Always declare types for variables and functions (parameters and return
+  values)
 - Avoid using `any` type - create necessary types instead
 - Use JSDoc to document public classes and methods
 - Write concise, maintainable, and technically accurate code
@@ -25,7 +28,8 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 - Use camelCase for variables, functions, and methods
 - Use kebab-case for file and directory names
 - Use UPPERCASE for environment variables
-- Use descriptive variable names with auxiliary verbs: `isLoading`, `hasError`, `canDelete`
+- Use descriptive variable names with auxiliary verbs: `isLoading`, `hasError`,
+  `canDelete`
 - Start each function with a verb
 
 ### Functions
@@ -33,7 +37,8 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 - Write short functions with a single purpose
 - Use arrow functions for simple operations and consistency
 - Use async/await for asynchronous operations
-- Prefer the RO-RO pattern (Receive Object, Return Object) for multiple parameters
+- Prefer the RO-RO pattern (Receive Object, Return Object) for multiple
+  parameters
 
 ### Types and Interfaces
 
@@ -42,24 +47,150 @@ You are an expert in Deno and TypeScript development with deep knowledge of buil
 - Use Zod for runtime validation when needed
 - Use `readonly` for immutable properties
 
+### Type Organization
+
+**Guide**: For projects with multiple scripts sharing types, organize types in a
+dedicated directory.
+
+#### When to Use Separate Type Files
+
+| Project Size                  | Recommendation                      |
+| ----------------------------- | ----------------------------------- |
+| Single script                 | Keep types inline in the script     |
+| 2-3 scripts with shared types | Create `types/index.ts`             |
+| Larger projects               | Create `types/` with multiple files |
+
+#### Directory Structure
+
+```
+project/
+├── main.ts              # Config, utilities, re-exports types
+├── types/
+│   └── index.ts         # All shared type definitions
+└── scripts/
+    ├── script-a.ts      # Imports types from main.ts or types/
+    └── script-b.ts
+```
+
+#### Type File Pattern
+
+```typescript
+// types/index.ts
+/**
+ * Shared Type Definitions
+ *
+ * Domain types used across multiple scripts.
+ */
+
+// =============================================================================
+// Domain Types
+// =============================================================================
+
+/** User record from database */
+export type User = {
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+};
+
+/** User with computed fields */
+export type UserWithBalance = User & {
+  readonly balance: string;
+};
+
+// =============================================================================
+// API Response Types
+// =============================================================================
+
+export type ApiResponse<T> = {
+  readonly success: boolean;
+  readonly data?: T;
+  readonly error?: string;
+};
+
+// =============================================================================
+// Script-Specific Types (export for reuse)
+// =============================================================================
+
+/** Result of a batch operation */
+export type BatchResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+```
+
+#### Re-exporting from main.ts
+
+```typescript
+// main.ts
+import "@std/dotenv/load";
+
+// Re-export all types for convenient imports
+export type {
+  ApiResponse,
+  BatchResult,
+  User,
+  UserWithBalance,
+} from "./types/index.ts";
+
+// ... rest of main.ts (config, utilities)
+```
+
+#### Importing in Scripts
+
+```typescript
+// scripts/process-users.ts
+import {
+  type BatchResult,
+  config,
+  type User,
+  type UserWithBalance,
+} from "../main.ts";
+
+// Script-specific types can stay inline if not shared
+type ProcessingStats = {
+  total: number;
+  processed: number;
+  failed: number;
+};
+```
+
+#### Type Naming Conventions
+
+| Type Category   | Naming Pattern    | Example                       |
+| --------------- | ----------------- | ----------------------------- |
+| Domain entities | PascalCase noun   | `User`, `Transaction`         |
+| With additions  | `EntityWithX`     | `UserWithBalance`             |
+| API responses   | `EntityResponse`  | `TransactionResponse`         |
+| State objects   | `EntityState`     | `AirdropState`                |
+| Results         | `OperationResult` | `SubmitResult`, `FetchResult` |
+| Status enums    | `EntityStatus`    | `TransactionStatus`           |
+
 ---
 
 ## Questions to Ask First
 
-Before implementing, clarify these with the user to determine which patterns to apply:
+Before implementing, clarify these with the user to determine which patterns to
+apply:
 
-1. **Input format**: "What is the input format - JSON file, CSV file, or text file with one item per line?"
-2. **Output format**: "Should the output be JSON, CSV, or both? Do you need a human-readable summary?"
-3. **Environment**: "Will this run against staging/testnet or production/mainnet? Do you need environment switching?"
-4. **Batch processing**: "How many items should be processed in parallel per batch? (default: 50)"
-5. **Resumability**: "Should the script be resumable if interrupted? (saves state after each operation)"
-6. **Dry run**: "Do you want a --dry-run flag to preview without making changes?"
+1. **Input format**: "What is the input format - JSON file, CSV file, or text
+   file with one item per line?"
+2. **Output format**: "Should the output be JSON, CSV, or both? Do you need a
+   human-readable summary?"
+3. **Environment**: "Will this run against staging/testnet or
+   production/mainnet? Do you need environment switching?"
+4. **Batch processing**: "How many items should be processed in parallel per
+   batch? (default: 50)"
+5. **Resumability**: "Should the script be resumable if interrupted? (saves
+   state after each operation)"
+6. **Dry run**: "Do you want a --dry-run flag to preview without making
+   changes?"
 
 ---
 
 ## Guides
 
-The following sections are **templates and patterns** to apply based on the user's answers above. Adapt them to the specific use case.
+The following sections are **templates and patterns** to apply based on the
+user's answers above. Adapt them to the specific use case.
 
 ---
 
@@ -92,6 +223,7 @@ project/
 ```
 
 **Add imports based on needs:**
+
 ```bash
 # Always needed
 deno add jsr:@std/dotenv
@@ -117,7 +249,8 @@ deno task check
 
 ## Environment Configuration
 
-**Guide**: Always use `@std/dotenv` for environment variables. Never hardcode secrets.
+**Guide**: Always use `@std/dotenv` for environment variables. Never hardcode
+secrets.
 
 ```typescript
 // main.ts
@@ -154,6 +287,7 @@ export const getOutputFile = (baseName: string): string =>
 ```
 
 **.env.example:**
+
 ```
 ENV="production"
 API_KEY="your_api_key_here"
@@ -228,7 +362,8 @@ main();
 
 ## Batch Processing
 
-**Guide**: Apply if user needs to process many items with controlled concurrency.
+**Guide**: Apply if user needs to process many items with controlled
+concurrency.
 
 ```typescript
 const BATCH_SIZE = 50; // Adjust based on user's answer
@@ -294,7 +429,7 @@ const withRetry = async <T>(
       if (attempt < MAX_RETRIES) {
         const backoffMs = INITIAL_BACKOFF_MS * 2 ** (attempt - 1);
         console.warn(
-          `  [Retry ${attempt}/${MAX_RETRIES}] ${label} failed. Waiting ${backoffMs}ms...`
+          `  [Retry ${attempt}/${MAX_RETRIES}] ${label} failed. Waiting ${backoffMs}ms...`,
         );
         await sleep(backoffMs);
       }
@@ -338,7 +473,7 @@ const main = async (): Promise<void> => {
   const alreadyProcessed = new Set(
     previousState?.results
       .filter((r) => r.status === "success")
-      .map((r) => r.id) || []
+      .map((r) => r.id) || [],
   );
 
   const results: OutputRecord[] = previousState?.results || [];
@@ -363,6 +498,7 @@ const main = async (): Promise<void> => {
 **Guide**: Apply based on user's input format answer.
 
 ### JSON Input
+
 ```typescript
 const loadJsonInput = async <T>(filePath: string): Promise<T[]> => {
   const content = await Deno.readTextFile(filePath);
@@ -371,16 +507,21 @@ const loadJsonInput = async <T>(filePath: string): Promise<T[]> => {
 ```
 
 ### CSV Input
+
 ```typescript
 import { parse } from "@std/csv/parse";
 
-const loadCsvInput = async <T>(filePath: string, columns: string[]): Promise<T[]> => {
+const loadCsvInput = async <T>(
+  filePath: string,
+  columns: string[],
+): Promise<T[]> => {
   const content = await Deno.readTextFile(filePath);
   return parse(content, { skipFirstRow: true, columns }) as T[];
 };
 ```
 
 ### Text Input (one item per line)
+
 ```typescript
 const loadTextInput = async (filePath: string): Promise<string[]> => {
   const content = await Deno.readTextFile(filePath);
@@ -393,6 +534,7 @@ const loadTextInput = async (filePath: string): Promise<string[]> => {
 **Guide**: Apply based on user's output format answer.
 
 ### JSON Output
+
 ```typescript
 const writeJsonOutput = async <T>(filePath: string, data: T): Promise<void> => {
   await Deno.writeTextFile(filePath, JSON.stringify(data, null, 2));
@@ -401,6 +543,7 @@ const writeJsonOutput = async <T>(filePath: string, data: T): Promise<void> => {
 ```
 
 ### CSV Output
+
 ```typescript
 import { stringify } from "@std/csv/stringify";
 
@@ -416,8 +559,12 @@ const writeCsvOutput = async (
 ```
 
 ### Text Summary
+
 ```typescript
-const writeSummary = async (filePath: string, stats: Record<string, unknown>): Promise<void> => {
+const writeSummary = async (
+  filePath: string,
+  stats: Record<string, unknown>,
+): Promise<void> => {
   const summary = `
 ================================================================================
 SUMMARY
@@ -447,9 +594,13 @@ console.log(`${progress} ${id} - FAILED: ${error}`);
 console.log(`${progress} ${id} - SKIPPED (reason)`);
 
 // Section dividers
-console.log("================================================================================");
+console.log(
+  "================================================================================",
+);
 console.log("SECTION TITLE");
-console.log("================================================================================");
+console.log(
+  "================================================================================",
+);
 
 // Batch progress
 console.log(`\n--- Batch ${batchNum}/${totalBatches} ---`);
@@ -553,7 +704,7 @@ describe("processRecord", () => {
     await assertRejects(
       () => processRecord({ id: "", name: "" }),
       Error,
-      "Invalid input"
+      "Invalid input",
     );
   });
 });

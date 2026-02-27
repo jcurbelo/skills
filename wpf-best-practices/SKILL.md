@@ -135,7 +135,7 @@ WPF app csproj:
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -148,7 +148,7 @@ Shared library csproj (cross-platform):
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -1095,7 +1095,7 @@ public interface IAppLogger
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -1353,7 +1353,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
-      with: { dotnet-version: 9.0.x }
+      with: { dotnet-version: 10.0.x }
     - run: dotnet restore
     - run: dotnet build -c Debug
     - run: dotnet test --no-build -c Debug
@@ -1367,7 +1367,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
-      with: { dotnet-version: 9.0.x }
+      with: { dotnet-version: 10.0.x }
     - run: >
         dotnet publish src/MyApp/MyApp.csproj
         -c Release -r ${{ matrix.rid }}
